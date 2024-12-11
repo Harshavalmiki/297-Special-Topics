@@ -1,0 +1,228 @@
+{
+  "name": "PartC-HumanInTheLoop-Harsha",
+  "nodes": [
+    {
+      "parameters": {
+        "systemMessage": "Try to answer the user's question confidently. If not, escalate."
+      },
+      "id": "ai-348jkdsl9203dfhj34",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.2,
+      "position": [
+        780,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "name": "dont_know_tool",
+        "description": "Use this tool to escalate unanswered queries.",
+        "workflowId": "={{ $workflow.id }}",
+        "fields": {
+          "values": [
+            {
+              "name": "chatInput",
+              "stringValue": "={{ $('Chat Trigger').item.json.chatInput }}"
+            }
+          ]
+        }
+      },
+      "id": "tool-239kdsf9834dfh923",
+      "name": "Not sure?",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Main workflow: AI agent using custom tool",
+        "height": 486.5625,
+        "width": 927.5,
+        "color": 7
+      },
+      "id": "sticky-78234dfjks9834df23",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        460,
+        460
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "**Set your credentials**",
+        "height": 213.44323866265472,
+        "width": 150,
+        "color": 2
+      },
+      "id": "sticky-90234dfjh2893kds92",
+      "name": "Sticky Note - Credentials",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        660,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "chat-2394kjdfsh8293dfj29",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1,
+      "position": [
+        560,
+        520
+      ],
+      "webhookId": "trigger-098fhsdjk9834dfh23"
+    },
+    {
+      "parameters": {
+        "jsCode": "response = {\"response\":\"I'm sorry I don't know the answer. Please repeat your question and include your email address so I can request help.\"};\nreturn response;"
+      },
+      "id": "code-234fkdjs8293dfhj34",
+      "name": "Prompt the user to provide an email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        1520
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "response = {\"response\": \"Thank you for getting in touch. I've messaged a human to help.\"}\nreturn response;"
+      },
+      "id": "code-348fjkdsl0923dfhj34",
+      "name": "Confirm that we've messaged a human",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1260,
+        1260
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-2394dkfjsh9834dhf23",
+              "leftValue": "={{ $('Execute Workflow Trigger').item.json.chatInput }}",
+              "rightValue": "/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\\.[a-zA-Z0-9_-]+)/gi",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-239dkjsh98234dfhj29",
+      "name": "Check if user has provided email",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        720,
+        1360
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "general",
+          "mode": "name"
+        },
+        "text": "={{ \"A user had a question the bot couldn't answer. Here's their message: \" + $('Execute Workflow Trigger').item.json.chatInput }}",
+        "otherOptions": {}
+      },
+      "id": "slack-934jksd8923fhj92",
+      "name": "Message Slack for help",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [
+        1020,
+        1260
+      ],
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "slack-2394djsk9834dfhj29",
+          "name": "Slack Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "AI Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "tool-239kdsf9834dfh923",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "ai-348jkdsl9203dfhj34",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if user has provided email": {
+      "main": [
+        [
+          {
+            "node": "slack-934jksd8923fhj92",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "code-234fkdjs8293dfhj34",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message Slack for help": {
+      "main": [
+        [
+          {
+            "node": "code-348fjkdsl0923dfhj34",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
