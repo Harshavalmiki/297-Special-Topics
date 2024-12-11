@@ -16,9 +16,6 @@ Text generation with NanoGPT using **JAX:**
 
 **Colab link:** https://colab.research.google.com/drive/17uKd-67fkaVXa4VBNJdVlYl_3O-tDqc4?usp=sharing
 
-**Medium Article:** 
-
-**Youtube Video Link:** 
 
 **b) Implement "textbooks are all you need"**
 
